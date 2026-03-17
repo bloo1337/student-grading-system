@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Predict Grade{% endblock %}
+{% block page_icon %}<i class="fas fa-brain"></i>{% endblock %}
+{% block page_title %}Grade Prediction{% endblock %}
+{% block breadcrumb %}Home / Predict Grade{% endblock %}
+{% block extra_style %}
+<style>
+.result-orb{background:linear-gradient(135deg,#050b18,#0a1628,#1e3a5f);border:1px solid rgba(99,179,237,.25);border-radius:20px;padding:36px;text-align:center;position:relative;overflow:hidden;animation:su .5s ease}
+.result-orb::before{content:'';position:absolute;inset:-40%;border-radius:50%;background:radial-gradient(circle,rgba(99,179,237,.12) 0%,transparent 70%);animation:glowpulse 3s ease-in-out infinite}
+@keyframes glowpulse{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.1);opacity:1}}
+.rgrade{font-size:5.5rem;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1;position:relative;z-index:1;text-shadow:0 0 40px currentColor;margin:8px 0}
+.cbar{background:rgba(255,255,255,.1);border-radius:999px;height:8px;margin:14px auto;width:75%}
+.cfill{height:100%;border-radius:999px;background:linear-gradient(90deg,#fbbf24,#f59e0b);transition:width 1.2s ease}
+.tip-box{background:rgba(255,255,255,.02);border:1px solid rgba(99,179,237,.1);border-radius:10px;padding:14px;margin-top:12px}
+.tip-item{display:flex;align-items:flex-start;gap:8px;font-size:.8rem;color:#94a3b8;margin-bottom:6px}
+.tip-item:last-child{margin-bottom:0}
+.tip-item i{color:#fbbf24;margin-top:2px;flex-shrink:0}
+</style>
+{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:20px">
+  <!-- FORM -->
+  <div class="gc">
+    <div class="gch"><h6><i class="fas fa-brain"></i>Enter Student Data for AI Prediction</h6></div>
+    <div class="gcb">
+      <form method="POST">
+        <div class="fsn">
+          <div class="st"><i class="fas fa-id-card"></i>Student Information</div>
+          <div class="g2">
+            <div class="fg"><label class="flbl">Student Name</label><input type="text" name="name" class="nin" placeholder="e.g. Sahaj Koirala" required/></div>
+            <div class="fg"><label class="flbl">Roll Number</label><input type="text" name="roll" class="nin" placeholder="BCA2020001"/></div>
+          </div>
+          <div class="fg"><label class="flbl">Semester</label>
+            <select name="semester" class="nsel" required>
+              {% for s in range(1,7) %}<option value="{{ s }}" {% if s==6 %}selected{% endif %}>Semester {{ s }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="fsn">
+          <div class="st"><i class="fas fa-calendar-check"></i>Attendance &amp; Behavior</div>
+          <div class="g2">
+            <div class="fg"><label class="flbl">Attendance % (0-100)</label><input type="number" name="attendance" class="nin" min="0" max="100" step="0.1" placeholder="78.5" required/></div>
+            <div class="fg"><label class="flbl">Behavior</label>
+              <select name="behavior" class="nsel" required>
+                <option value="Excellent">🌟 Excellent</option>
+                <option value="Good" selected>👍 Good</option>
+                <option value="Average">😐 Average</option>
+                <option value="Poor">⚠️ Poor</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="fsn">
+          <div class="st"><i class="fas fa-pencil-alt"></i>Assignments (out of 50 each)</div>
+          <div class="g3" style="grid-template-columns:1fr 1fr 1fr">
+            {% for i in [1,2,3] %}
+            <div class="fg"><label class="flbl">Assignment {{ i }}</label><input type="number" name="assignment{{ i }}" class="nin" min="0" max="50" step="0.5" placeholder="40" required/></div>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="fsn">
+          <div class="st"><i class="fas fa-file-alt"></i>Quizzes, Midterm &amp; Study Hours</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px">
+            <div class="fg"><label class="flbl">Quiz 1 (/20)</label><input type="number" name="quiz1" class="nin" min="0" max="20" step="0.5" placeholder="15" required/></div>
+            <div class="fg"><label class="flbl">Quiz 2 (/20)</label><input type="number" name="quiz2" class="nin" min="0" max="20" step="0.5" placeholder="14" required/></div>
+            <div class="fg"><label class="flbl">Midterm (/50)</label><input type="number" name="midterm" class="nin" min="0" max="50" step="0.5" placeholder="38" required/></div>
+            <div class="fg"><label class="flbl">Study Hrs/Day</label><input type="number" name="study_hours" class="nin" min="0" max="16" step="0.5" placeholder="4" required/></div>
+          </div>
+        </div>
+        <button type="submit" class="bn" style="width:100%"><i class="fas fa-magic"></i>🔮 Predict Grade with AI</button>
+      </form>
+    </div>
+  </div>
+  <!-- RESULT -->
+  <div>
+    {% if result %}
+    <div class="result-orb" style="margin-bottom:16px">
+      <div style="font-size:.8rem;color:#94a3b8;position:relative;z-index:1">Prediction for <strong style="color:#fff">{{ result.name }}</strong></div>
+      <div class="rgrade" style="color:{{ result.color }}">{{ result.grade }}</div>
+      <div style="font-size:.95rem;color:#e2e8f0;position:relative;z-index:1">Estimated Score: <strong style="color:#fbbf24">{{ result.est_score }}</strong> / 100</div>
+      <div class="cbar"><div class="cfill" id="cfill" style="width:0"></div></div>
+      <div style="font-size:.8rem;color:#94a3b8;position:relative;z-index:1">Model Confidence: <strong style="color:#fbbf24">{{ result.confidence }}%</strong></div>
+      <div style="font-size:.72rem;color:#475569;margin-top:8px;position:relative;z-index:1">{{ result.timestamp }}</div>
+    </div>
+    <div class="gc">
+      <div class="gch"><h6><i class="fas fa-lightbulb"></i>Suggestions</h6></div>
+      <div class="gcb">
+        <div class="tip-box">
+          {% if result.est_score < 50 %}
+          <div class="tip-item"><i class="fas fa-exclamation-triangle"></i>Attendance needs significant improvement — aim for 80%+</div>
+          <div class="tip-item"><i class="fas fa-book"></i>Increase daily study hours to at least 4-5 hours</div>
+          <div class="tip-item"><i class="fas fa-chalkboard-teacher"></i>Seek extra help from teachers regularly</div>
+          <div class="tip-item"><i class="fas fa-users"></i>Join study groups with higher-performing peers</div>
+          {% elif result.est_score < 75 %}
+          <div class="tip-item"><i class="fas fa-chart-line"></i>Good foundation — push to complete all assignments on time</div>
+          <div class="tip-item"><i class="fas fa-pencil-alt"></i>Focus on assignment quality, not just completion</div>
+          <div class="tip-item"><i class="fas fa-clock"></i>Prepare for midterms at least 2 weeks in advance</div>
+          {% else %}
+          <div class="tip-item"><i class="fas fa-star"></i>Excellent performance — maintain this momentum!</div>
+          <div class="tip-item"><i class="fas fa-hands-helping"></i>Help peers to reinforce your own understanding</div>
+          <div class="tip-item"><i class="fas fa-trophy"></i>Consider taking on extra credit opportunities</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    <script>setTimeout(()=>{document.getElementById('cfill').style.width='{{ result.confidence }}%'},300)</script>
+    {% else %}
+    <div class="gc" style="margin-bottom:16px">
+      <div style="padding:50px 30px;text-align:center">
+        <div style="font-size:4rem;margin-bottom:16px;animation:float 3s ease-in-out infinite">🎓</div>
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        <div style="font-size:1.1rem;font-weight:700;color:#fff;margin-bottom:6px">AI Grade Prediction</div>
+        <div style="font-size:.84rem;color:#94a3b8">Fill in the student details on the left to get an instant ML-powered grade prediction using our trained Random Forest model.</div>
+      </div>
+    </div>
+    <div class="gc">
+      <div class="gch"><h6><i class="fas fa-table"></i>Grade Scale Reference</h6></div>
+      <div style="overflow-x:auto">
+        <table class="nt">
+          <thead><tr><th>Grade</th><th>Range</th><th>Description</th></tr></thead>
+          <tbody>
+          {% for g,r,d in [("A+","90-100","Outstanding"),("A","80-89","Very Good"),("B+","70-79","Good"),("B","60-69","Average"),("C+","50-59","Below Avg"),("C","40-49","Passing"),("D","35-39","Marginal"),("F","0-34","Failing")] %}
+          <tr><td>{% set gc=g.replace('+','p') %}<span class="gb g{{ gc }}">{{ g }}</span></td><td class="mono" style="font-size:.8rem">{{ r }}</td><td style="font-size:.82rem;color:#94a3b8">{{ d }}</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

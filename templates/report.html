@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block page_icon %}<i class="fas fa-chart-bar"></i>{% endblock %}
+{% block page_title %}Analytics Report{% endblock %}
+{% block breadcrumb %}Home / Analytics{% endblock %}
+{% block content %}
+<!-- STATS -->
+<div class="g3" style="margin-bottom:20px">
+  <div class="sc d1" style="--ca:linear-gradient(90deg,#2563eb,#38bdf8);--cg:#63b3ed">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-users"></i></div>
+    <div class="slbl"><i class="fas fa-users" style="margin-right:5px"></i>Total Students</div>
+    <div class="sval" data-count="{{ total }}">{{ total }}</div>
+  </div>
+  <div class="sc d2" style="--ca:linear-gradient(90deg,#059669,#4ade80);--cg:#4ade80">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-star"></i></div>
+    <div class="slbl"><i class="fas fa-star" style="margin-right:5px"></i>Average Score</div>
+    <div class="sval" data-count="{{ avg_score }}">{{ avg_score }}</div>
+  </div>
+  <div class="sc d3" style="--ca:linear-gradient(90deg,#b45309,#fbbf24);--cg:#fbbf24">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-check-circle"></i></div>
+    <div class="slbl"><i class="fas fa-check-circle" style="margin-right:5px"></i>Pass Rate</div>
+    <div class="sval" data-count="{{ pass_rate }}" data-suffix="%">{{ pass_rate }}%</div>
+  </div>
+</div>
+<!-- CHARTS ROW 1 -->
+<div class="g2" style="margin-bottom:16px">
+  <div class="gc d1"><div class="gch"><h6><i class="fas fa-chart-pie"></i>Grade Distribution</h6></div><div class="gcb"><canvas id="c1" height="250"></canvas></div></div>
+  <div class="gc d2"><div class="gch"><h6><i class="fas fa-layer-group"></i>Avg Score by Semester</h6></div><div class="gcb"><canvas id="c2" height="250"></canvas></div></div>
+</div>
+<!-- CHARTS ROW 2 -->
+<div class="g2" style="margin-bottom:20px">
+  <div class="gc d3"><div class="gch"><h6><i class="fas fa-smile"></i>Behavior vs Score</h6></div><div class="gcb"><canvas id="c3" height="230"></canvas></div></div>
+  <div class="gc d4"><div class="gch"><h6><i class="fas fa-calendar-check"></i>Attendance Impact on Score</h6></div><div class="gcb"><canvas id="c4" height="230"></canvas></div></div>
+</div>
+<!-- AT RISK -->
+<div class="gc">
+  <div class="gch"><h6 style="color:#f87171"><i class="fas fa-exclamation-triangle" style="color:#f87171"></i>At-Risk Students (Score &lt; 40)</h6></div>
+  {% if at_risk %}
+  <div style="overflow-x:auto">
+    <table class="nt">
+      <thead><tr><th>#</th><th>Name</th><th>Roll</th><th>Semester</th><th>Attendance</th><th>Score</th><th>Grade</th></tr></thead>
+      <tbody>
+      {% for s in at_risk %}
+      <tr>
+        <td style="color:#475569;font-size:.78rem">{{ loop.index }}</td>
+        <td style="font-weight:600;color:#fff">{{ s.name }}</td>
+        <td class="mono" style="font-size:.8rem;color:#94a3b8">{{ s.roll_number }}</td>
+        <td><span style="background:rgba(99,179,237,.1);color:#63b3ed;padding:2px 9px;border-radius:6px;font-size:.78rem">S{{ s.semester }}</span></td>
+        <td style="color:{% if s.attendance_percent<60 %}#f87171{% else %}#fbbf24{% endif %};font-weight:600">{{ s.attendance_percent }}%</td>
+        <td style="font-weight:700;color:#f87171">{{ s.final_score }}</td>
+        <td>{% set gc=s.grade.replace('+','p') %}<span class="gb g{{ gc }}">{{ s.grade }}</span></td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:30px;text-align:center;color:#4ade80"><i class="fas fa-check-circle" style="font-size:2rem;display:block;margin-bottom:8px"></i>No at-risk students!</div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='rgba(99,179,237,0.08)';
+const gd={{ grade_dist|safe }},sd={{ sem_avg|safe }},bd={{ beh_avg|safe }},ad={{ att_score|safe }};
+const cl=["#4ade80","#86efac","#63b3ed","#7dd3fc","#fbbf24","#fde68a","#fb923c","#f87171"];
+new Chart(document.getElementById('c1'),{type:'doughnut',data:{labels:Object.keys(gd),datasets:[{data:Object.values(gd),backgroundColor:cl,borderWidth:2,borderColor:'#0a1628'}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}},cutout:'58%'}});
+new Chart(document.getElementById('c2'),{type:'bar',data:{labels:Object.keys(sd).map(k=>'Sem '+k),datasets:[{label:'Avg Score',data:Object.values(sd),backgroundColor:'rgba(99,179,237,.7)',borderRadius:8,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,min:50,grid:{color:'rgba(99,179,237,.06)'}},x:{grid:{display:false}}}}});
+new Chart(document.getElementById('c3'),{type:'bar',data:{labels:Object.keys(bd),datasets:[{label:'Avg Score',data:Object.values(bd),backgroundColor:["rgba(74,222,128,.7)","rgba(99,179,237,.7)","rgba(251,191,36,.7)","rgba(239,68,68,.7)"],borderRadius:8,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,min:40,grid:{color:'rgba(99,179,237,.06)'}},x:{grid:{display:false}}}}});
+new Chart(document.getElementById('c4'),{type:'line',data:{labels:Object.keys(ad),datasets:[{label:'Avg Score',data:Object.values(ad),borderColor:'#38bdf8',backgroundColor:'rgba(56,189,248,.08)',borderWidth:2.5,pointRadius:5,pointBackgroundColor:'#38bdf8',fill:true,tension:.3}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:false,min:40,grid:{color:'rgba(99,179,237,.06)'}},x:{grid:{display:false}}}}});
+</script>
+{% endblock %}

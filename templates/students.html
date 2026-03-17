@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Students{% endblock %}
+{% block page_icon %}<i class="fas fa-users"></i>{% endblock %}
+{% block page_title %}Student Records{% endblock %}
+{% block breadcrumb %}Home / Students{% endblock %}
+{% block content %}
+<div class="gc" style="margin-bottom:16px">
+  <div class="gcb">
+    <form method="GET">
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:end">
+        <div>
+          <label class="flbl">Search</label>
+          <div class="sw2"><i class="fas fa-search"></i><input type="text" name="search" class="nin" placeholder="Name or roll number..." value="{{ search }}"/></div>
+        </div>
+        <div>
+          <label class="flbl">Grade</label>
+          <select name="grade" class="nsel">
+            <option value="">All Grades</option>
+            {% for g in grades %}<option value="{{ g }}" {% if g==grade_filter %}selected{% endif %}>{{ g }}</option>{% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Semester</label>
+          <select name="semester" class="nsel">
+            <option value="">All</option>
+            {% for s in range(1,7) %}<option value="{{ s }}" {% if sem_filter|string==s|string %}selected{% endif %}>Sem {{ s }}</option>{% endfor %}
+          </select>
+        </div>
+        <div><label class="flbl">&nbsp;</label><button type="submit" class="bn" style="width:100%"><i class="fas fa-filter"></i>Filter</button></div>
+        <div><label class="flbl">&nbsp;</label><a href="{{ url_for('students') }}" class="bg" style="width:100%;justify-content:center"><i class="fas fa-times"></i>Reset</a></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="gc">
+  <div class="gch">
+    <h6><i class="fas fa-list"></i>Showing {{ records|length }} of {{ total }} student(s)</h6>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="nt">
+      <thead><tr><th>#</th><th>Name</th><th>Roll</th><th>Sem</th><th>Attendance</th><th>Midterm</th><th>Study Hrs</th><th>Score</th><th>Grade</th><th>Behavior</th><th></th></tr></thead>
+      <tbody>
+      {% for r in records %}
+      <tr style="animation:su .3s ease {{ (loop.index0 * 0.03)|round(2) }}s backwards">
+        <td style="color:#475569;font-size:.78rem">{{ loop.index }}</td>
+        <td style="font-weight:600;color:#fff">{{ r.name }}</td>
+        <td class="mono" style="font-size:.8rem;color:#94a3b8">{{ r.roll_number }}</td>
+        <td><span style="background:rgba(99,179,237,.1);color:#63b3ed;padding:2px 9px;border-radius:6px;font-size:.78rem;font-weight:600">S{{ r.semester }}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:7px">
+            <div class="spbar" style="width:52px"><div class="spfill" data-w="{{ r.attendance_percent }}" style="background:{% if r.attendance_percent>=75 %}#4ade80{% elif r.attendance_percent>=60 %}#fbbf24{% else %}#ef4444{% endif %};width:0"></div></div>
+            <span style="font-size:.8rem;color:{% if r.attendance_percent>=75 %}#4ade80{% elif r.attendance_percent>=60 %}#fbbf24{% else %}#f87171{% endif %}">{{ r.attendance_percent }}%</span>
+          </div>
+        </td>
+        <td style="font-size:.85rem">{{ r.midterm_score }}<span style="color:#475569">/50</span></td>
+        <td style="font-size:.85rem">{{ r.study_hours_per_day }}<span style="color:#475569">h</span></td>
+        <td style="font-weight:700;color:#fff">{{ r.final_score }}</td>
+        <td>{% set gc=r.grade.replace('+','p') %}<span class="gb g{{ gc }}">{{ r.grade }}</span></td>
+        <td>
+          {% set bc={'Excellent':'rgba(74,222,128,.15)#4ade80','Good':'rgba(99,179,237,.15)#63b3ed','Average':'rgba(251,191,36,.15)#fbbf24','Poor':'rgba(239,68,68,.15)#f87171'} %}
+          <span style="font-size:.75rem;padding:2px 9px;border-radius:6px;
+            background:{% if r.behavior=='Excellent' %}rgba(74,222,128,.12){% elif r.behavior=='Good' %}rgba(99,179,237,.12){% elif r.behavior=='Average' %}rgba(251,191,36,.12){% else %}rgba(239,68,68,.12){% endif %};
+            color:{% if r.behavior=='Excellent' %}#4ade80{% elif r.behavior=='Good' %}#63b3ed{% elif r.behavior=='Average' %}#fbbf24{% else %}#f87171{% endif %}">
+            {{ r.behavior }}
+          </span>
+        </td>
+        <td>
+          <a href="{{ url_for('student_detail', roll=r.roll_number) }}" style="background:rgba(99,179,237,.1);border:1px solid rgba(99,179,237,.2);color:#63b3ed;padding:5px 12px;border-radius:7px;text-decoration:none;font-size:.78rem;transition:all .2s;display:inline-block">
+            <i class="fas fa-eye"></i>
+          </a>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="11" style="text-align:center;padding:40px;color:#475569"><i class="fas fa-search" style="display:block;font-size:2rem;margin-bottom:10px"></i>No students found</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_icon %}<i class="fas fa-th-large"></i>{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block breadcrumb %}Home / Dashboard{% endblock %}
+{% block content %}
+<!-- STATS -->
+<div class="g4" style="margin-bottom:20px">
+  <div class="sc d1" style="--ca:linear-gradient(90deg,#2563eb,#38bdf8);--cg:#63b3ed">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-users"></i></div>
+    <div class="slbl"><i class="fas fa-users" style="margin-right:5px"></i>Total Students</div>
+    <div class="sval" data-count="{{ total }}">{{ total }}</div>
+    <div class="ssub"><span class="swd dg" style="margin-right:4px"></span>All semesters active</div>
+  </div>
+  <div class="sc d2" style="--ca:linear-gradient(90deg,#059669,#4ade80);--cg:#4ade80">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-chart-line"></i></div>
+    <div class="slbl"><i class="fas fa-chart-line" style="margin-right:5px"></i>Average Score</div>
+    <div class="sval" data-count="{{ avg_score }}" data-suffix="">{{ avg_score }}</div>
+    <div class="ssub" style="color:#4ade80"><i class="fas fa-arrow-up" style="margin-right:4px"></i>Out of 100</div>
+  </div>
+  <div class="sc d3" style="--ca:linear-gradient(90deg,#dc2626,#f87171);--cg:#ef4444">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-exclamation-triangle"></i></div>
+    <div class="slbl"><i class="fas fa-exclamation-triangle" style="margin-right:5px"></i>At-Risk Students</div>
+    <div class="sval" data-count="{{ at_risk }}">{{ at_risk }}</div>
+    <div class="ssub" style="color:#f87171"><i class="fas fa-arrow-down" style="margin-right:4px"></i>Score below 40</div>
+  </div>
+  <div class="sc d4" style="--ca:linear-gradient(90deg,#b45309,#fbbf24);--cg:#fbbf24">
+    <div class="scg"></div><div class="bgi"><i class="fas fa-calendar-check"></i></div>
+    <div class="slbl"><i class="fas fa-calendar-check" style="margin-right:5px"></i>Avg Attendance</div>
+    <div class="sval" data-count="{{ avg_attend }}" data-suffix="%">{{ avg_attend }}%</div>
+    <div class="ssub"><i class="fas fa-info-circle" style="margin-right:4px"></i>Across all students</div>
+  </div>
+</div>
+<!-- CHARTS -->
+<div style="display:grid;grid-template-columns:1fr 1.5fr;gap:16px;margin-bottom:20px">
+  <div class="gc d1">
+    <div class="gch"><h6><i class="fas fa-chart-pie"></i>Grade Distribution</h6></div>
+    <div class="gcb"><canvas id="gc1" height="230"></canvas></div>
+  </div>
+  <div class="gc d2">
+    <div class="gch"><h6><i class="fas fa-chart-bar"></i>Students per Grade</h6></div>
+    <div class="gcb"><canvas id="gc2" height="230"></canvas></div>
+  </div>
+</div>
+<!-- RECENT + QUICK ACTIONS -->
+<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px">
+  <div class="gc">
+    <div class="gch">
+      <h6><i class="fas fa-history"></i>Recent Predictions</h6>
+      <a href="{{ url_for('predictions') }}" style="font-size:.78rem;color:#63b3ed;text-decoration:none">View All &rarr;</a>
+    </div>
+    {% if recent_preds %}
+    <div style="overflow-x:auto">
+    <table class="nt">
+      <thead><tr><th>Student</th><th>Grade</th><th>Confidence</th><th>Time</th></tr></thead>
+      <tbody>
+      {% for p in recent_preds %}
+      <tr>
+        <td><div style="font-weight:600;color:#fff">{{ p.name }}</div><div style="font-size:.75rem;color:#475569;font-family:'JetBrains Mono',monospace">{{ p.roll }}</div></td>
+        <td>{% set gc=p.grade.replace('+','p') %}<span class="gb g{{ gc }}">{{ p.grade }}</span></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="spbar" style="width:70px"><div class="spfill" data-w="{{ p.confidence }}" style="background:#2563eb;width:0"></div></div>
+            <span style="font-size:.79rem;color:#94a3b8">{{ p.confidence }}%</span>
+          </div>
+        </td>
+        <td style="font-size:.75rem;color:#475569">{{ p.timestamp }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div style="padding:40px;text-align:center;color:#475569">
+      <i class="fas fa-robot" style="font-size:2.5rem;display:block;margin-bottom:12px;color:#1e3a5f"></i>
+      No predictions yet &mdash; <a href="{{ url_for('predict') }}" style="color:#63b3ed">make your first one</a>
+    </div>
+    {% endif %}
+  </div>
+  <div class="gc">
+    <div class="gch"><h6><i class="fas fa-bolt"></i>Quick Actions</h6></div>
+    <div class="gcb" style="display:flex;flex-direction:column;gap:10px">
+      <a href="{{ url_for('predict') }}" class="ac" style="--acc:rgba(99,179,237,.12)">
+        <span class="aico" style="color:#38bdf8">🤖</span>
+        <div class="at">Predict a Grade</div>
+        <div class="asb">AI-powered grade prediction</div>
+      </a>
+      <a href="{{ url_for('students') }}" class="ac" style="--acc:rgba(74,222,128,.12)">
+        <span class="aico" style="color:#4ade80">👨‍🎓</span>
+        <div class="at">Browse Students</div>
+        <div class="asb">View all 500 records</div>
+      </a>
+      <a href="{{ url_for('report') }}" class="ac" style="--acc:rgba(251,191,36,.12)">
+        <span class="aico" style="color:#fbbf24">📊</span>
+        <div class="at">Analytics Report</div>
+        <div class="asb">Charts & at-risk analysis</div>
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const gd={{ grade_dist_json|safe }};
+const lb=Object.keys(gd),vl=Object.values(gd);
+const cl=["#4ade80","#86efac","#63b3ed","#7dd3fc","#fbbf24","#fde68a","#fb923c","#f87171"];
+Chart.defaults.color='#94a3b8';Chart.defaults.borderColor='rgba(99,179,237,0.08)';
+new Chart(document.getElementById('gc1'),{type:'doughnut',data:{labels:lb,datasets:[{data:vl,backgroundColor:cl,borderWidth:2,borderColor:'#0a1628'}]},options:{plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}},cutout:'62%'}});
+new Chart(document.getElementById('gc2'),{type:'bar',data:{labels:lb,datasets:[{label:'Students',data:vl,backgroundColor:cl,borderRadius:8,borderSkipped:false}]},options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'rgba(99,179,237,0.06)'}},x:{grid:{display:false}}}}});
+</script>
+{% endblock %}

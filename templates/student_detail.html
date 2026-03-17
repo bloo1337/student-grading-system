@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ student.name }}{% endblock %}
+{% block page_icon %}<i class="fas fa-user-graduate"></i>{% endblock %}
+{% block page_title %}Student Profile{% endblock %}
+{% block breadcrumb %}Students / {{ student.name.split()[0] }}{% endblock %}
+{% block content %}
+<div style="display:grid;grid-template-columns:300px 1fr;gap:20px">
+  <!-- Profile -->
+  <div>
+    <div class="gc" style="margin-bottom:16px">
+      <div style="background:linear-gradient(135deg,#0f2552,#1e40af,#7c3aed);padding:32px 20px;text-align:center">
+        <div style="width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,.15);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;font-size:2rem;border:2px solid rgba(255,255,255,.3);animation:float 3s ease-in-out infinite">
+          <i class="fas fa-user-graduate"></i>
+        </div>
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+        <div style="font-size:1.1rem;font-weight:800;color:#fff">{{ student.name }}</div>
+        <div class="mono" style="font-size:.78rem;color:rgba(255,255,255,.6);margin-top:4px">{{ student.roll_number }}</div>
+        <div style="margin-top:14px">
+          {% set gc=student.grade.replace('+','p') %}
+          <span class="gb g{{ gc }}" style="font-size:1.2rem;padding:6px 18px">{{ student.grade }}</span>
+        </div>
+      </div>
+      <div class="gcb">
+        {% for lbl, val in [('Final Score', student.final_score|string + ' / 100'),('Semester','Semester ' + student.semester|string),('Semester Rank',student.sem_rank|string + ' / ' + student.sem_total|string),('Semester Avg',student.sem_avg|string),('Behavior',student.behavior)] %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(99,179,237,.07)">
+          <span style="font-size:.8rem;color:#94a3b8">{{ lbl }}</span>
+          <span style="font-size:.85rem;font-weight:600;color:#e2e8f0">{{ val }}</span>
+        </div>
+        {% endfor %}
+        <div style="margin-top:12px">
+          <div class="spbar"><div class="spfill" data-w="{{ student.final_score }}" style="background:{% if student.final_score>=80 %}#4ade80{% elif student.final_score>=60 %}#2563eb{% elif student.final_score>=40 %}#fbbf24{% else %}#ef4444{% endif %};width:0"></div></div>
+        </div>
+      </div>
+    </div>
+    <a href="{{ url_for('students') }}" class="bg" style="width:100%;justify-content:center"><i class="fas fa-arrow-left"></i>Back to Students</a>
+  </div>
+  <!-- Details -->
+  <div>
+    <div class="gc" style="margin-bottom:16px">
+      <div class="gch"><h6><i class="fas fa-chart-bar"></i>Academic Performance Breakdown</h6></div>
+      <div class="gcb">
+        <div class="g2">
+          {% for lbl, val, mx in [('Attendance',student.attendance_percent,100),('Assignment 1',student.assignment1,50),('Assignment 2',student.assignment2,50),('Assignment 3',student.assignment3,50),('Quiz 1',student.quiz1,20),('Quiz 2',student.quiz2,20),('Midterm',student.midterm_score,50),('Study Hours/Day',student.study_hours_per_day,10)] %}
+          <div style="background:rgba(255,255,255,.02);border:1px solid rgba(99,179,237,.08);border-radius:9px;padding:13px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:7px">
+              <span style="font-size:.78rem;color:#94a3b8">{{ lbl }}</span>
+              <span style="font-size:.85rem;font-weight:700;color:#fff">{{ val }}<span style="color:#475569;font-size:.75rem">/{{ mx }}</span></span>
+            </div>
+            <div class="spbar"><div class="spfill" data-w="{{ ((val/mx)*100)|round }}" style="background:{% if (val/mx)>=0.75 %}#4ade80{% elif (val/mx)>=0.5 %}#2563eb{% else %}#f59e0b{% endif %};width:0"></div></div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    <div class="gc">
+      <div class="gch"><h6><i class="fas fa-brain"></i>AI Prediction Tool</h6></div>
+      <div class="gcb" style="text-align:center;padding:30px">
+        <div style="font-size:3rem;margin-bottom:12px">🤖</div>
+        <p style="color:#94a3b8;font-size:.85rem;margin-bottom:16px">Want a fresh grade prediction for this student with custom inputs?</p>
+        <a href="{{ url_for('predict') }}" class="bn"><i class="fas fa-magic"></i>Open Prediction Tool</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

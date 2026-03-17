@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Predictions Log{% endblock %}
+{% block page_icon %}<i class="fas fa-history"></i>{% endblock %}
+{% block page_title %}Predictions History{% endblock %}
+{% block breadcrumb %}Home / Predictions{% endblock %}
+{% block content %}
+<div class="gc">
+  <div class="gch"><h6><i class="fas fa-history"></i>All Predictions ({{ preds|length }})</h6>
+    <a href="{{ url_for('predict') }}" class="bn" style="padding:7px 16px;font-size:.8rem"><i class="fas fa-plus"></i>New Prediction</a>
+  </div>
+  {% if preds %}
+  <div style="overflow-x:auto">
+    <table class="nt">
+      <thead><tr><th>#</th><th>Student</th><th>Grade</th><th>Est. Score</th><th>Confidence</th><th>Attendance</th><th>Midterm</th><th>Behavior</th><th>Time</th></tr></thead>
+      <tbody>
+      {% for p in preds %}
+      <tr style="animation:su .3s ease {{ (loop.index0*0.04)|round(2) }}s backwards">
+        <td style="color:#475569;font-size:.78rem">{{ loop.index }}</td>
+        <td><div style="font-weight:600;color:#fff">{{ p.name }}</div><div class="mono" style="font-size:.73rem;color:#475569">{{ p.roll }}</div></td>
+        <td>{% set gc=p.grade.replace('+','p') %}<span class="gb g{{ gc }}">{{ p.grade }}</span></td>
+        <td style="font-weight:700;color:#fbbf24">{{ p.est_score }}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:7px">
+            <div class="spbar" style="width:60px"><div class="spfill" data-w="{{ p.confidence }}" style="background:#2563eb;width:0"></div></div>
+            <span style="font-size:.78rem;color:#94a3b8">{{ p.confidence }}%</span>
+          </div>
+        </td>
+        <td style="font-size:.82rem">{{ p.inputs.attendance }}%</td>
+        <td style="font-size:.82rem">{{ p.inputs.midterm }}/50</td>
+        <td>
+          <span style="font-size:.73rem;padding:2px 8px;border-radius:5px;background:{% if p.inputs.behavior=='Excellent' %}rgba(74,222,128,.12){% elif p.inputs.behavior=='Good' %}rgba(99,179,237,.12){% elif p.inputs.behavior=='Average' %}rgba(251,191,36,.12){% else %}rgba(239,68,68,.12){% endif %};color:{% if p.inputs.behavior=='Excellent' %}#4ade80{% elif p.inputs.behavior=='Good' %}#63b3ed{% elif p.inputs.behavior=='Average' %}#fbbf24{% else %}#f87171{% endif %}">{{ p.inputs.behavior }}</span>
+        </td>
+        <td style="font-size:.75rem;color:#475569;white-space:nowrap">{{ p.timestamp }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="padding:70px;text-align:center;color:#475569">
+    <div style="font-size:3.5rem;margin-bottom:14px;animation:float 3s ease-in-out infinite">📭</div>
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    <div style="font-size:1rem;font-weight:600;color:#94a3b8;margin-bottom:8px">No predictions yet</div>
+    <a href="{{ url_for('predict') }}" class="bn"><i class="fas fa-magic"></i>Make Your First Prediction</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
